@@ -1,31 +1,36 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-const Navbar = () => (
-  <nav
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "1rem 2rem",
-      backgroundColor: "#0f172a",
-      color: "white",
-    }}
-  >
-    <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
-      🚛 Courier Logistics
-    </span>
-    <div style={{ display: "flex", gap: "1.5rem" }}>
-      <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-        Dashboard
-      </Link>
-      <Link to="/bags" style={{ color: "white", textDecoration: "none" }}>
-        Bag Management
-      </Link>
-      <Link to="/trucks" style={{ color: "white", textDecoration: "none" }}>
-        Truck Schedules
-      </Link>
-    </div>
-  </nav>
-);
+const navLinks = [
+  { to: "/", label: "Dashboard" },
+  { to: "/bags", label: "Bag Management" },
+  { to: "/trucks", label: "Truck Schedules" },
+];
+
+const Navbar = () => {
+  const { pathname } = useLocation();
+
+  return (
+    <nav className="bg-slate-900 text-white px-8 py-4 flex items-center justify-between shadow-md">
+      <span className="text-lg font-bold tracking-tight">
+        🚛 Courier Logistics
+      </span>
+      <div className="flex gap-6">
+        {navLinks.map(({ to, label }) => (
+          <Link
+            key={to}
+            to={to}
+            className={`text-sm font-medium transition-colors hover:text-white ${
+              pathname === to
+                ? "text-white border-b-2 border-blue-400 pb-0.5"
+                : "text-slate-400"
+            }`}
+          >
+            {label}
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
+};
 
 export default Navbar;

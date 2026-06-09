@@ -46,154 +46,150 @@ const BagManagement = () => {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Bag Management</h1>
+    <div className="p-8 max-w-7xl mx-auto">
+      <h1 className="text-2xl font-bold text-slate-800 mb-6">Bag Management</h1>
 
-      <div style={card}>
-        <h3>Create New Bag</h3>
-        <label>
-          Direction:
-          <select
-            value={direction}
-            onChange={(e) => setDirection(e.target.value)}
-            style={input}
-          >
-            {directions.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Region ID:
-          <input
-            style={input}
-            value={regionId}
-            onChange={(e) => setRegionId(e.target.value)}
-          />
-        </label>
-        <button style={btn} onClick={handleCreateBag}>
-          Create Bag
-        </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Create New Bag */}
+        <div className="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
+          <h3 className="text-base font-semibold text-slate-700 mb-4">
+            Create New Bag
+          </h3>
+          <div className="flex flex-col gap-3">
+            <label className="text-sm text-slate-600">
+              Direction
+              <select
+                value={direction}
+                onChange={(e) => setDirection(e.target.value)}
+                className="mt-1 block w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {directions.map((d) => (
+                  <option key={d} value={d}>
+                    {d.charAt(0).toUpperCase() + d.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm text-slate-600">
+              Region ID
+              <input
+                value={regionId}
+                onChange={(e) => setRegionId(e.target.value)}
+                className="mt-1 block w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+            <button
+              onClick={handleCreateBag}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+            >
+              Create Bag
+            </button>
+          </div>
+        </div>
+
+        {/* Add Package to Bag */}
+        <div className="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
+          <h3 className="text-base font-semibold text-slate-700 mb-4">
+            Add Package to Bag
+          </h3>
+          <div className="flex flex-col gap-3">
+            <label className="text-sm text-slate-600">
+              Select Bag
+              <select
+                value={selectedBag}
+                onChange={(e) => setSelectedBag(e.target.value)}
+                className="mt-1 block w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- select bag --</option>
+                {bags.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.bag_code} ({b.direction})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm text-slate-600">
+              Select Package
+              <select
+                value={selectedPackage}
+                onChange={(e) => setSelectedPackage(e.target.value)}
+                className="mt-1 block w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- select package --</option>
+                {unbagged.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.tracking_id.slice(0, 8)}... — {p.sender_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              onClick={handleAddPackage}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+            >
+              Add to Bag
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div style={card}>
-        <h3>Add Package to Bag</h3>
-        <label>
-          Select Bag:
-          <select
-            style={input}
-            value={selectedBag}
-            onChange={(e) => setSelectedBag(e.target.value)}
-          >
-            <option value="">-- select bag --</option>
-            {bags.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.bag_code} ({b.direction})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Select Package:
-          <select
-            style={input}
-            value={selectedPackage}
-            onChange={(e) => setSelectedPackage(e.target.value)}
-          >
-            <option value="">-- select package --</option>
-            {unbagged.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.tracking_id.slice(0, 8)}... — {p.sender_name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button style={btn} onClick={handleAddPackage}>
-          Add to Bag
-        </button>
-      </div>
+      {/* Bags Table */}
+      <h2 className="text-base font-semibold text-slate-700 border-l-4 border-l-blue-400 pl-3 mb-3">
+        All Bags{" "}
+        <span className="text-slate-400 font-normal">({bags.length})</span>
+      </h2>
 
-      <h2>All Bags</h2>
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          fontSize: "0.9rem",
-        }}
-      >
-        <thead>
-          <tr style={{ backgroundColor: "#f1f5f9" }}>
-            <th style={th}>Bag Code</th>
-            <th style={th}>Direction</th>
-            <th style={th}>Status</th>
-            <th style={th}>Packages</th>
-            <th style={th}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bags.map((b) => (
-            <tr key={b.id}>
-              <td style={td}>{b.bag_code}</td>
-              <td style={td}>{b.direction}</td>
-              <td style={td}>{b.status}</td>
-              <td style={td}>{b.package_count}</td>
-              <td style={td}>
-                <button
-                  onClick={() => handleDelay(b.id)}
-                  style={{
-                    ...btn,
-                    backgroundColor: "#ef4444",
-                    padding: "0.25rem 0.5rem",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  Mark Delayed
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {bags.length === 0 ? (
+        <p className="text-slate-400 text-sm">No bags created yet.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                {["Bag Code", "Direction", "Status", "Packages", "Actions"].map(
+                  (h) => (
+                    <th key={h} className="px-4 py-3 text-left font-medium">
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {bags.map((b) => (
+                <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 font-mono text-xs">{b.bag_code}</td>
+                  <td className="px-4 py-3 capitalize">{b.direction}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        b.status === "delayed"
+                          ? "bg-red-100 text-red-700"
+                          : b.status === "open"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{b.package_count}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleDelay(b.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md transition-colors"
+                    >
+                      Mark Delayed
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
-};
-
-const card: React.CSSProperties = {
-  border: "1px solid #e2e8f0",
-  borderRadius: "8px",
-  padding: "1rem",
-  marginBottom: "1.5rem",
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.75rem",
-  maxWidth: "500px",
-};
-const input: React.CSSProperties = {
-  display: "block",
-  width: "100%",
-  padding: "0.4rem",
-  marginTop: "0.25rem",
-  borderRadius: "4px",
-  border: "1px solid #cbd5e1",
-};
-const btn: React.CSSProperties = {
-  padding: "0.5rem 1rem",
-  backgroundColor: "#3b82f6",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-};
-const th: React.CSSProperties = {
-  padding: "0.5rem",
-  textAlign: "left",
-  borderBottom: "1px solid #e2e8f0",
-};
-const td: React.CSSProperties = {
-  padding: "0.5rem",
-  borderBottom: "1px solid #f1f5f9",
 };
 
 export default BagManagement;
