@@ -1,19 +1,16 @@
 import { Request, Response } from "express";
-import pool from "../db/db";
+import prisma from "../db/prisma";
 
-// GET all packages grouped for dashboard
 export const getAllPackages = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const result = await pool.query(`
-      SELECT p.*, r.region_code, r.region_name
-      FROM packages p
-      LEFT JOIN regions r ON r.id = p.region_id
-      ORDER BY p.created_at DESC
-    `);
-    const packages = result.rows;
+    const packages = await prisma.package.findMany({
+      include: { region: true },
+      orderBy: { created_at: "desc" },
+    });
+
     res.json({
       packages,
       dashboard: {
@@ -28,7 +25,6 @@ export const getAllPackages = async (
   }
 };
 
-// POST create new package (from webhook)
 export const createPackage = async (
   req: Request,
   res: Response,
@@ -44,55 +40,40 @@ export const createPackage = async (
       region_id,
     } = req.body;
 
-    const result = await pool.query(
-      `
-      INSERT INTO packages
-        (tracking_id, sender_name, sender_address, receiver_name, receiver_address, weight, region_id, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'to_be_picked_up')
-      RETURNING *
-    `,
-      [
+    const pkg = await prisma.package.create({
+      data: {
         tracking_id,
         sender_name,
         sender_address,
         receiver_name,
         receiver_address,
         weight,
-        region_id,
-      ],
-    );
+        region_id: parseInt(region_id),
+        status: "to_be_picked_up",
+      },
+    });
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(pkg);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// PATCH update package status
 export const updatePackageStatus = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const { trackingId } = req.params;
+    const trackingId = req.params.trackingId as string;
     const { status, current_location, delay_reason } = req.body;
 
-    const result = await pool.query(
-      `
-      UPDATE packages
-      SET status = $1, current_location = $2, delay_reason = $3, updated_at = NOW()
-      WHERE tracking_id = $4
-      RETURNING *
-    `,
-      [status, current_location, delay_reason, trackingId],
-    );
+    const pkg = await prisma.package.update({
+      where: { tracking_id: trackingId },
+      data: { status, current_location, delay_reason, updated_at: new Date() },
+    });
 
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: "Package not found" });
-      return;
-    }
-    res.json(result.rows[0]);
+    res.json(pkg);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

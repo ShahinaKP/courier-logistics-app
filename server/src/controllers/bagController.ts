@@ -1,74 +1,63 @@
 import { Request, Response } from "express";
-import pool from "../db/db";
+import prisma from "../db/prisma";
 
-// GET all bags
 export const getAllBags = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const result = await pool.query(`
-      SELECT b.*, r.region_code, r.region_name,
-        COUNT(pb.id) as package_count
-      FROM bags b
-      LEFT JOIN regions r ON r.id = b.region_id
-      LEFT JOIN package_bags pb ON pb.bag_id = b.id
-      GROUP BY b.id, r.region_code, r.region_name
-      ORDER BY b.created_at DESC
-    `);
-    res.json(result.rows);
+    const bags = await prisma.bag.findMany({
+      include: {
+        region: true,
+        package_bags: true,
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    const result = bags.map((b) => ({
+      ...b,
+      package_count: b.package_bags.length,
+    }));
+
+    res.json(result);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// POST create new bag
 export const createBag = async (req: Request, res: Response): Promise<void> => {
   try {
     const { region_id, direction } = req.body;
     const bag_code = `BAG-${Date.now()}`;
 
-    const result = await pool.query(
-      `
-      INSERT INTO bags (bag_code, region_id, direction)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `,
-      [bag_code, region_id, direction],
-    );
+    const bag = await prisma.bag.create({
+      data: { bag_code, region_id: parseInt(region_id), direction },
+    });
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(bag);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-// POST add package to bag
 export const addPackageToBag = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const { bagId } = req.params;
+    const bagId = parseInt(req.params.bagId as string);
     const { package_id } = req.body;
 
-    await pool.query(
-      `
-      INSERT INTO package_bags (package_id, bag_id)
-      VALUES ($1, $2)
-    `,
-      [package_id, bagId],
-    );
+    await prisma.packageBag.create({
+      data: { package_id: parseInt(package_id), bag_id: bagId },
+    });
 
-    await pool.query(
-      `
-      UPDATE packages SET status = 'added_to_bag', updated_at = NOW()
-      WHERE id = $1
-    `,
-      [package_id],
-    );
+    await prisma.package.update({
+      where: { id: parseInt(package_id) },
+      data: { status: "added_to_bag", updated_at: new Date() },
+    });
 
     res.status(201).json({ message: "Package added to bag" });
   } catch (err) {
@@ -77,32 +66,30 @@ export const addPackageToBag = async (
   }
 };
 
-// PATCH update bag status (delayed etc)
 export const updateBagStatus = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const { bagId } = req.params;
+    const bagId = parseInt(req.params.bagId as string);
     const { status, delay_reason } = req.body;
 
-    await pool.query(
-      `
-      UPDATE bags SET status = $1, updated_at = NOW() WHERE id = $2
-    `,
-      [status, bagId],
-    );
+    await prisma.bag.update({
+      where: { id: bagId },
+      data: { status, updated_at: new Date() },
+    });
 
-    // Update all packages in this bag
     if (delay_reason) {
-      await pool.query(
-        `
-        UPDATE packages p SET delay_reason = $1, updated_at = NOW()
-        FROM package_bags pb
-        WHERE pb.package_id = p.id AND pb.bag_id = $2
-      `,
-        [delay_reason, bagId],
-      );
+      const packageBags = await prisma.packageBag.findMany({
+        where: { bag_id: bagId },
+      });
+
+      await prisma.package.updateMany({
+        where: {
+          id: { in: packageBags.map((pb) => pb.package_id!).filter(Boolean) },
+        },
+        data: { delay_reason, updated_at: new Date() },
+      });
     }
 
     res.json({ message: "Bag status updated" });
