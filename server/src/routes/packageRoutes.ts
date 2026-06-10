@@ -9,6 +9,7 @@ const router = Router();
 
 router.get("/", getAllPackages);
 router.post("/", createPackage);
+router.post("/webhook", createPackage);
 router.patch("/:trackingId/status", updatePackageStatus);
 
 export default router;
