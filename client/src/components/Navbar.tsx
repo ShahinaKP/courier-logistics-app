@@ -6,31 +6,26 @@ const navLinks = [
   { to: "/trucks", label: "Truck Schedules" },
 ];
 
-const Navbar = () => {
+export default function Navbar() {
   const { pathname } = useLocation();
-
   return (
-    <nav className="bg-slate-900 text-white px-8 py-4 flex items-center justify-between shadow-md">
-      <span className="text-lg font-bold tracking-tight">
-        🚛 Courier Logistics
-      </span>
-      <div className="flex gap-6">
-        {navLinks.map(({ to, label }) => (
-          <Link
-            key={to}
-            to={to}
-            className={`text-sm font-medium transition-colors hover:text-white ${
-              pathname === to
-                ? "text-white border-b-2 border-blue-400 pb-0.5"
-                : "text-slate-400"
-            }`}
-          >
-            {label}
-          </Link>
-        ))}
+    <nav className="border-b bg-slate-900 text-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <h1 className="text-xl font-bold">🚛 Courier Logistics</h1>
+        <div className="flex items-center gap-6">
+          {navLinks.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`text-sm transition-colors hover:text-white ${
+                pathname === to ? "pb-0.5 text-white" : "text-slate-400"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}

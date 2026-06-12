@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { fetchPackages } from "../api/api";
 import type { Package } from "../types";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Package2, ShoppingBag, AlertTriangle } from "lucide-react";
 
 const statusLabel: Record<string, string> = {
   to_be_picked_up: "To Be Picked Up",
@@ -12,23 +20,25 @@ const statusLabel: Record<string, string> = {
   out_for_delivery: "Out for Delivery",
 };
 
-const statusBadge: Record<string, string> = {
-  to_be_picked_up: "bg-slate-100 text-slate-700",
+const statusVariant: Record<string, string> = {
+  to_be_picked_up: "bg-blue-100 text-blue-700",
   picked_up: "bg-purple-100 text-purple-700",
   added_to_bag: "bg-amber-100 text-amber-700",
   en_route: "bg-green-100 text-green-700",
-  arrived: "bg-teal-100 text-teal-700",
+  arrived: "bg-emerald-100 text-emerald-700",
   scheduled_for_delivery: "bg-cyan-100 text-cyan-700",
   out_for_delivery: "bg-orange-100 text-orange-700",
 };
 
 const PackageTable = ({ packages }: { packages: Package[] }) =>
   packages.length === 0 ? (
-    <p className="text-slate-400 text-sm py-2">No packages.</p>
+    <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+      No packages in this section.
+    </div>
   ) : (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
+    <div className="overflow-x-auto rounded-lg border">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-slate-600">
+        <thead className="bg-muted/50 text-muted-foreground">
           <tr>
             {[
               "Tracking ID",
@@ -45,29 +55,27 @@ const PackageTable = ({ packages }: { packages: Package[] }) =>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y">
           {packages.map((p) => (
-            <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-              <td className="px-4 py-3 font-mono text-xs text-slate-500">
+            <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+              <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                 {p.tracking_id.slice(0, 8)}...
               </td>
-              <td className="px-4 py-3">{p.sender_name}</td>
+              <td className="px-4 py-3 font-medium">{p.sender_name}</td>
               <td className="px-4 py-3">{p.receiver_name}</td>
               <td className="px-4 py-3">{p.weight} kg</td>
               <td className="px-4 py-3">
-                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">
-                  {p.region_code}
-                </span>
+                <Badge variant="secondary">{p.region_code}</Badge>
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge[p.status] || "bg-slate-100 text-slate-600"}`}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusVariant[p.status] || "bg-slate-100 text-slate-700"}`}
                 >
                   {statusLabel[p.status]}
                 </span>
               </td>
-              <td className="px-4 py-3 text-red-500 text-xs">
-                {p.delay_reason || "-"}
+              <td className="px-4 py-3 text-xs text-red-500">
+                {p.delay_reason || "—"}
               </td>
             </tr>
           ))}
@@ -76,30 +84,31 @@ const PackageTable = ({ packages }: { packages: Package[] }) =>
     </div>
   );
 
-const sectionBorder: Record<string, string> = {
-  amber: "border-l-amber-400",
-  blue: "border-l-blue-400",
-  red: "border-l-red-400",
-};
-
 const Section = ({
   title,
   packages,
-  color,
+  icon,
 }: {
   title: string;
   packages: Package[];
-  color: string;
+  icon: React.ReactNode;
 }) => (
-  <div className="mb-8">
-    <h2
-      className={`text-base font-semibold text-slate-700 border-l-4 ${sectionBorder[color]} pl-3 mb-3`}
-    >
-      {title}{" "}
-      <span className="text-slate-400 font-normal">({packages.length})</span>
-    </h2>
-    <PackageTable packages={packages} />
-  </div>
+  <Card className="mb-6">
+    <CardHeader>
+      <CardTitle className="flex items-center justify-between text-base">
+        <span className="flex items-center gap-2">
+          {icon}
+          {title}
+        </span>
+        <span className="text-sm font-normal text-muted-foreground">
+          {packages.length} packages
+        </span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <PackageTable packages={packages} />
+    </CardContent>
+  </Card>
 );
 
 const Dashboard = () => {
@@ -115,56 +124,73 @@ const Dashboard = () => {
 
   if (!dashboard)
     return (
-      <div className="flex items-center justify-center h-48 text-slate-400">
+      <div className="flex h-48 items-center justify-center text-muted-foreground">
         Loading...
       </div>
     );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">
-        Logistics Dashboard
-      </h1>
-      <p className="text-slate-500 text-sm mb-6">
-        Back-office package and logistics management.
-      </p>
+    <div className="container mx-auto space-y-6 p-6">
+      <div>
+        <h1 className="text-4xl font-bold tracking-tight">
+          Logistics Dashboard
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Back-office package and logistics management.
+        </p>
+      </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-slate-500 mb-1">Unbagged Packages</p>
-          <p className="text-3xl font-bold text-amber-500">
-            {dashboard.unbagged.length}
-          </p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-slate-500 mb-1">Bagged Packages</p>
-          <p className="text-3xl font-bold text-blue-500">
-            {dashboard.bagged.length}
-          </p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-slate-500 mb-1">Delayed Packages</p>
-          <p className="text-3xl font-bold text-red-500">
-            {dashboard.delayed.length}
-          </p>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Package2 className="h-5 w-5 text-amber-500" />
+              Unbagged
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{dashboard.unbagged.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShoppingBag className="h-5 w-5 text-blue-500" />
+              Bagged
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{dashboard.bagged.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Delayed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{dashboard.delayed.length}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Section
-        title="📦 Unbagged Packages"
+        title="Unbagged Packages"
         packages={dashboard.unbagged}
-        color="amber"
+        icon={<Package2 className="h-4 w-4 text-amber-500" />}
       />
       <Section
-        title="🛍️ Bagged Packages"
+        title="Bagged Packages"
         packages={dashboard.bagged}
-        color="blue"
+        icon={<ShoppingBag className="h-4 w-4 text-blue-500" />}
       />
       <Section
-        title="⚠️ Delayed Packages"
+        title="Delayed Packages"
         packages={dashboard.delayed}
-        color="red"
+        icon={<AlertTriangle className="h-4 w-4 text-red-500" />}
       />
     </div>
   );
