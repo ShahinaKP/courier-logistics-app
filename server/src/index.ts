@@ -7,6 +7,7 @@ import cors from "cors";
 import packageRoutes from "./routes/packageRoutes";
 import bagRoutes from "./routes/bagRoutes";
 import truckRoutes from "./routes/truckRoutes";
+import regionRoutes from "./routes/regionRoutes";
 
 import prisma from "./db/prisma";
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use("/api/packages", packageRoutes);
 app.use("/api/bags", bagRoutes);
 app.use("/api/trucks", truckRoutes);
+app.use("/api/regions", regionRoutes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Courier Logistics API is running" });
