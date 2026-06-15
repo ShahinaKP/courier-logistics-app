@@ -8,7 +8,14 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Package2, ShoppingBag, AlertTriangle } from "lucide-react";
+import { Button } from "../components/ui/button";
+import {
+  Package2,
+  ShoppingBag,
+  AlertTriangle,
+  Inbox,
+  RefreshCw,
+} from "lucide-react";
 
 const statusLabel: Record<string, string> = {
   to_be_picked_up: "To Be Picked Up",
@@ -59,13 +66,15 @@ const PackageTable = ({ packages }: { packages: Package[] }) =>
           {packages.map((p) => (
             <tr key={p.id} className="hover:bg-muted/30 transition-colors">
               <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                {p.tracking_id.slice(0, 8)}...
+                {p.tracking_id.slice(0, 8)}…
               </td>
               <td className="px-4 py-3 font-medium">{p.sender_name}</td>
               <td className="px-4 py-3">{p.receiver_name}</td>
               <td className="px-4 py-3">{p.weight} kg</td>
               <td className="px-4 py-3">
-                <Badge variant="secondary">{p.region_code}</Badge>
+                <Badge variant="secondary">
+                  {(p as any).region?.region_code ?? "—"}
+                </Badge>
               </td>
               <td className="px-4 py-3">
                 <span
@@ -111,74 +120,111 @@ const Section = ({
   </Card>
 );
 
+const getWindowLabel = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Morning window (midnight – noon)";
+  if (h < 18) return "Afternoon window (noon – 6 pm)";
+  return "Evening window (6 pm – midnight)";
+};
+
 const Dashboard = () => {
   const [dashboard, setDashboard] = useState<{
+    new_in_window: Package[];
     unbagged: Package[];
     bagged: Package[];
     delayed: Package[];
   } | null>(null);
 
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    fetchPackages()
+      .then((d) => setDashboard(d.dashboard))
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
-    fetchPackages().then((data) => setDashboard(data.dashboard));
+    load();
   }, []);
 
-  if (!dashboard)
+  if (loading)
     return (
       <div className="flex h-48 items-center justify-center text-muted-foreground">
-        Loading...
+        Loading…
       </div>
     );
+  if (!dashboard) return null;
+
+  const stats = [
+    {
+      label: "New in Window",
+      count: dashboard.new_in_window.length,
+      icon: <Inbox className="h-5 w-5 text-indigo-500" />,
+      sub: getWindowLabel(),
+    },
+    {
+      label: "Unbagged",
+      count: dashboard.unbagged.length,
+      icon: <Package2 className="h-5 w-5 text-amber-500" />,
+      sub: "Picked up, awaiting bag",
+    },
+    {
+      label: "Bagged",
+      count: dashboard.bagged.length,
+      icon: <ShoppingBag className="h-5 w-5 text-blue-500" />,
+      sub: "In sealed bags",
+    },
+    {
+      label: "Delayed",
+      count: dashboard.delayed.length,
+      icon: <AlertTriangle className="h-5 w-5 text-red-500" />,
+      sub: "Requires attention",
+    },
+  ];
 
   return (
     <div className="container mx-auto space-y-6 p-6">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">
-          Logistics Dashboard
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Back-office package and logistics management.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">
+            Logistics Dashboard
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Back-office package and logistics management.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={load} className="gap-1.5">
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Package2 className="h-5 w-5 text-amber-500" />
-              Unbagged
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{dashboard.unbagged.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ShoppingBag className="h-5 w-5 text-blue-500" />
-              Bagged
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{dashboard.bagged.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Delayed
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{dashboard.delayed.length}</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-4">
+        {stats.map((s) => (
+          <Card key={s.label}>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                {s.icon}
+                {s.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{s.count}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{s.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Section
-        title="Unbagged Packages"
+        title={`New in Current Window — ${getWindowLabel()}`}
+        packages={dashboard.new_in_window}
+        icon={<Inbox className="h-4 w-4 text-indigo-500" />}
+      />
+      <Section
+        title="Unbagged Packages (Picked Up)"
         packages={dashboard.unbagged}
         icon={<Package2 className="h-4 w-4 text-amber-500" />}
       />
