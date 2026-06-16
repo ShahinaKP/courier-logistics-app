@@ -1,31 +1,51 @@
 import { Link, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Truck,
+  ClipboardEdit,
+} from "lucide-react";
 
-const navLinks = [
-  { to: "/", label: "Dashboard" },
-  { to: "/bags", label: "Bag Management" },
-  { to: "/trucks", label: "Truck Schedules" },
+const links = [
+  {
+    to: "/",
+    label: "Dashboard",
+    icon: <LayoutDashboard className="h-4 w-4" />,
+  },
+  { to: "/bags", label: "Bags", icon: <ShoppingBag className="h-4 w-4" /> },
+  { to: "/trucks", label: "Trucks", icon: <Truck className="h-4 w-4" /> },
+  {
+    to: "/packages",
+    label: "Update Status",
+    icon: <ClipboardEdit className="h-4 w-4" />,
+  },
 ];
 
-export default function Navbar() {
+const Navbar = () => {
   const { pathname } = useLocation();
   return (
-    <nav className="border-b bg-slate-900 text-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <h1 className="text-xl font-bold">🚛 Courier Logistics</h1>
-        <div className="flex items-center gap-6">
-          {navLinks.map(({ to, label }) => (
+    <nav className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+      <div className="container mx-auto flex h-14 items-center gap-6 px-4">
+        <span className="font-bold tracking-tight">🚚 Courier Logistics</span>
+        <div className="flex items-center gap-1">
+          {links.map((l) => (
             <Link
-              key={to}
-              to={to}
-              className={`text-sm transition-colors hover:text-white ${
-                pathname === to ? "pb-0.5 text-white" : "text-slate-400"
+              key={l.to}
+              to={l.to}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                pathname === l.to
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
               }`}
             >
-              {label}
+              {l.icon}
+              {l.label}
             </Link>
           ))}
         </div>
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;

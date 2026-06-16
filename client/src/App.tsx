@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import BagManagement from "./pages/BagManagement";
 import TruckSchedules from "./pages/TruckSchedules";
+import PackageStatusUpdate from "./pages/PackageStatusUpdate";
 
 function App() {
   return (
@@ -12,9 +13,9 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/bags" element={<BagManagement />} />
         <Route path="/trucks" element={<TruckSchedules />} />
+        <Route path="/packages" element={<PackageStatusUpdate />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 export default App;
